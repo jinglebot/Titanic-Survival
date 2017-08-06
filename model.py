@@ -23,38 +23,47 @@ with open('data/train.csv', 'r') as csvfile:
 	reader = csv.reader(csvfile)
 	next (reader)
 	for line in reader:
-		y_log.append(float(line[1]))
+		y = float(line[1])
+		y_log.append(y)
 		train_log.append(line)
 	print('Size of y log: ', len(y_log))
 	print('Size of train log: ', len(train_log))
 
 # train log prep
 for log in train_log:
+	# Survived
 	del log[1]
 
 def prep_log(t_log):
 	for log in t_log:
+		# Embarked
 		if log[10] == 'S':
 			log[10] = 1.
 		elif log[10] == 'Q':
 			log[10] = 2.
 		else:
 			log[10] = 3.
+		# Cabin
 		if not log[9]:
 			log[9] = 1.
 		else:
 			log[9] = 2.
-		if log[7].isdigit():
-			log[7] = 1.
+		# Ticket
+		if not log[7]:
+			log[7] = 0.
 		else:
-			log[7] = 2.
+			log[7] = 1.
+		# Sex
 		if log[3] == "female":
 			log[3] = 1.
 		else:
 			log[3] = 2.
+		# Name
 		del log[2]
+		# Passenger No.
 		del log[0]
 		for i in range(len(log)):
+			# Fare, Parent/Child companions, Sibling/Spouse companions, Age
 			if not log[i]:
 				log[i] = 0.
 			if isinstance(log[i], str):
@@ -70,23 +79,23 @@ print(train_log[0])
 test_log = prep_log(test_log)
 print(test_log[0])
 
-
 # normalize values
-a = 0
-b = 1.
-# pclass
-minclass = [min(log) for log in zip(*train_log)]
-maxclass = [max(log) for log in zip(*train_log)]
-#print('min', minclass, 'max', maxclass)
-minval = min(minclass)
-#min(val for val in train_log)
-maxval = max(maxclass)
-#max(val for val in train_log)
-#print('min', minval, 'max', maxval)
-#for log in train_log:
-	#print(log[1])
-#norm = np.array(a + ( ( (train_log - minval)*(b - a) )/( maxval - minval ) ) )
-#print (norm)
+a = 0.
+b = 3.
+# Normalize Age
+minage = min(log[2] for log in train_log)
+maxage = max(log[2] for log in train_log)
+print('min', minage, 'max', maxage)
+for log in train_log:
+	log[2] = a + ( ( (log[2] - minage)*(b - a) )/( maxage - minage ) )
+# Normalize Fare
+minfare = min(log[6] for log in train_log)
+maxfare = max(log[6] for log in train_log)
+print('min', minfare, 'max', maxfare)
+for log in train_log:
+	log[6] = a + ( ( (log[6] - minfare)*(b - a) )/( maxfare - minfare ) )
+print (train_log[0])
+
 
 ###################
 # MODEL TRAINING
@@ -97,7 +106,7 @@ from sklearn.utils import shuffle
 
 t = time.time()
 
-train_X_samples, valid_X_samples, train_y_samples, valid_y_samples = train_test_split(train_log, y_log, test_size=0.2)
+train_X_samples, valid_X_samples, train_y_samples, valid_y_samples = train_test_split(train_log, y_log, test_size=0.1)
 
 X_train = np.array(train_X_samples)
 y_train = np.array(train_y_samples)
@@ -117,12 +126,11 @@ model.add(Dense(64, input_dim=9, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.5))
-#model.add(Flatten())
-model.add(Dense(1, activation='softmax'))
+model.add(Dense(1, activation='sigmoid'))
 
 # For a binary classification problem
 model.compile(optimizer='rmsprop',
-              loss='binary_crossentropy',
+              loss='mse',
               metrics=['accuracy'])
 
 model.fit(X_train, y_train, nb_epoch=20, batch_size=len(X_train))
@@ -130,11 +138,13 @@ score = model.evaluate(valid_X_samples, valid_y_samples, batch_size=len(valid_X_
 print("Accuracy: ", score)
 print("Training duration: ", round(time.time()-t, 2))
 print("Model trained")
+keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=1, batch_size=len(X_train), write_graph=True, write_grads=True, write_images=False, embeddings_freq=1, embeddings_layer_names=None, embeddings_metadata=None)
 
-survival = []
-#test_log = np.array(test_log)
-#for log in test_log:
-survival = model.predict(test_log)
+#survival = []
+test_log = np.array(test_log)
+#print(test_log.shape)
+test = test_log[0].reshape(1, -1)
+survival = model.predict(test)
 #survival.append([log[0], surv])
 print(survival)
 
