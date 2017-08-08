@@ -30,3 +30,6 @@ Accuracy = 0.874
 Maybe the highest.
 
 I'm trying to find what else I can tweak to raise the accuracy. I tried adding a `cross-validation` but I guess you don't need that with Random Forest. Then I tried `Standard Scaling` which improved the results a little bit (around 5%). I placed a `Binarizer` on my predictions to narrow the results to ones and zeros when I submit it. Well, here goes nothing!
+
+08/05/2017
+Public Leaderboard Accuracy = 0.76555
