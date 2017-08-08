@@ -33,3 +33,6 @@ I'm trying to find what else I can tweak to raise the accuracy. I tried adding a
 
 08/05/2017
 Public Leaderboard Accuracy = 0.76555
+Needs improvement
+
+I can still play with the name titles and cabin numbers as well as combinations of `Parch` and `SibSp`, and combine them with `Fare`. But I'm excited to start with Computer Vision so maybe till next time when I have free time.
